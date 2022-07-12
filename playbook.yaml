@@ -1,0 +1,67 @@
+---
+- name: Add epel repo
+  hosts: env
+  become: true
+
+  tasks:
+  - name: Install the latest epel
+    yum:
+      name: epel-release
+      state: latest
+  - name: Ensure group "hillel" exists
+    group:
+      name: hillel
+      state: present
+  - name: Add the user 'student'
+    user:
+      name: student
+      password: student_pass
+      groups: hillel,wheel
+
+- name: Install apache
+  hosts: app
+  become: true
+
+  tasks:
+  - name: Install the latest version of Apache
+    yum:
+      name: httpd
+      state: latest
+  - name: start and enable httpd
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+
+- name: Install start and configure mysql
+  hosts: db
+  become: true
+
+  tasks:
+  - name: install mysql-server
+    yum:
+      name: mysql-server
+      state: latest
+  - name: start and enable mysql
+    service:
+      name: mysqld
+      state: started
+      enabled: yes
+  - name: Install pip3
+    yum:
+      name: python3-pip
+      state: latest
+  - name: Install mysqlclient
+    pip:
+      name: PyMySQL
+  - name: Create database user with name 'dbuser' and password 'password' with all database privileges
+    mysql_user:
+      name: dbuser
+      host: '%'
+      password: password
+      priv: '*.*:ALL'
+      state: present
+  - name: create a new database  
+    mysql_db: name=db1 state=present login_user=dbuser login_password=password
+
+      
